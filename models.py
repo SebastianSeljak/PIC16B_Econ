@@ -18,11 +18,15 @@ industry_encoder = OneHotEncoder(sparse_output=False, handle_unknown='ignore')
 industry_encoder.fit(np.array([int(code) for code in naics_codes]).reshape(-1, 1))
 
 class EconDataset(Dataset):
-    def __init__(self, data, state_col, industry_col, unemployment_col, response_col):
+    def __init__(self, data, state_col, industry_col, unemployment_col, wage_col, tv_col, food_prep_col, food_cost_col, response_col):
         self.data = data.copy()
         self.state_col = state_col
         self.industry_col = industry_col
         self.unemployment_col = unemployment_col
+        self.wage_col = wage_col
+        self.tv_col = tv_col
+        self.food_prep_col = food_prep_col
+        self.food_cost_col = food_cost_col
         self.response_col = response_col
         self._preprocess_data()
 
@@ -30,6 +34,10 @@ class EconDataset(Dataset):
         self.encoded_states = state_encoder.transform(self.data[[self.state_col]].values.reshape(-1, 1)) # Applying one-hot encoding to the state column
         self.encoded_industries = industry_encoder.transform(self.data[[self.industry_col]].values.reshape(-1, 1)) # Applying one-hot encoding to the industry
         self.unemployment_stats = self.data[self.unemployment_col].values.reshape(-1, 1) # Turns into column vector
+        self.wage_stats = self.data[self.wage_col].values.reshape(-1, 1) # Turns into column vector
+        self.tv_stats = self.data[self.tv_col].values.reshape(-1, 1) # Turns into column vector
+        self.food_cost_stats = self.data[self.food_cost_col].values.reshape(-1, 1) # Turns into column vector
+        self.food_prep_stats = self.data[self.food_prep_col].values.reshape(-1, 1) # Turns into column vector
     
     def __len__(self):
         return len(self.data)
@@ -38,20 +46,24 @@ class EconDataset(Dataset):
         state = self.encoded_states[idx]
         industry = self.encoded_industries[idx]
         unemployment = self.unemployment_stats[idx]
-        predictor = np.concatenate((unemployment, state, industry), axis=0)
+        wage = self.wage_stats[idx]
+        tv = self.tv_stats[idx]
+        food_cost = self.food_cost_stats[idx]
+        food_prep = self.food_prep_stats[idx]
+        predictor = np.concatenate((unemployment, wage, tv, food_prep, food_cost, state, industry), axis=0)
         response = self.data[self.response_col].values[idx]
         return torch.tensor(predictor, dtype=torch.float32), torch.tensor(response, dtype=torch.float32).view(1) #Response is reshaped to a column vector.
     
 # Base Model Architecture  
 class SurvivalRateModel(nn.Module):
-    def __init__(self, input_size, hidden_size1, hidden_size2, output_size=1):
+    def __init__(self, input_size, hidden_size1, hidden_size2, dropout_rate, output_size=1):
         super(SurvivalRateModel, self).__init__()
 
         # Define layers:
         self.layers = nn.Sequential(
             nn.Linear(input_size, hidden_size1),
             nn.ReLU(),
-            nn.Dropout(0.1),  # Dropout, will be configured in train_with_wandb
+            nn.Dropout(dropout_rate),
             nn.Linear(hidden_size1, hidden_size2),
             nn.ReLU(),
             nn.Linear(hidden_size2, output_size),
@@ -78,6 +90,7 @@ class SurvivalRateModel(nn.Module):
         suppress=False,
         val_dataloader=None,
         patience=40,
+        use_wandb=False
     ):
         self.to(device)
         criterion = nn.MSELoss()
@@ -97,7 +110,8 @@ class SurvivalRateModel(nn.Module):
                 total_loss += loss
             train_loss = total_loss / len(dataloader)
             train_loss_cache.append(train_loss)
-            wandb.log({"train_loss": train_loss}, step=epoch)
+            if use_wandb:
+                wandb.log({"train_loss": train_loss}, step=epoch)
 
             if val_dataloader:
                 self.eval()
@@ -110,7 +124,8 @@ class SurvivalRateModel(nn.Module):
                         val_total_loss += val_loss
                 val_loss = val_total_loss / len(val_dataloader)
                 val_loss_cache.append(val_loss)
-                wandb.log({"val_loss": val_loss}, step=epoch)
+                if use_wandb:
+                    wandb.log({"val_loss": val_loss}, step=epoch)
 
                 if val_loss < best_val_loss:
                     best_val_loss = val_loss
@@ -234,22 +249,21 @@ class SurvivalRateModel_Combined(SurvivalRateModel):
         self.l1_lambda = l1_lambda
         self.l2_lambda = l2_lambda
         self.noise_std = noise_std
-        self.dropout_rate = dropout_rate
 
         # Override the layers with a deeper architecture and more regularization
         self.layers = nn.Sequential(
             nn.Linear(input_size, hidden_size1),
             nn.BatchNorm1d(hidden_size1),
             nn.LeakyReLU(negative_slope=0.01),
-            nn.Dropout(self.dropout_rate),
+            nn.Dropout(dropout_rate),
             nn.Linear(hidden_size1, hidden_size2),
             nn.BatchNorm1d(hidden_size2),
             nn.LeakyReLU(negative_slope=0.01),
-            nn.Dropout(self.dropout_rate),
+            nn.Dropout(dropout_rate),
             nn.Linear(hidden_size2, hidden_size3),
             nn.BatchNorm1d(hidden_size3),
             nn.LeakyReLU(negative_slope=0.01),
-            nn.Dropout(self.dropout_rate),
+            nn.Dropout(dropout_rate),
             nn.Linear(hidden_size3, hidden_size4),
             nn.BatchNorm1d(hidden_size4),
             nn.LeakyReLU(negative_slope=0.01),
