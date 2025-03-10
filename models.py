@@ -7,8 +7,14 @@ from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 from sklearn.preprocessing import OneHotEncoder
 import tqdm
+from utils import state_dict, naics_codes
 
 
+state_encoder = OneHotEncoder(sparse_output=False, handle_unknown='ignore')
+state_encoder.fit(np.array(list(state_dict.keys())).reshape(-1, 1))
+
+industry_encoder = OneHotEncoder(sparse_output=False, handle_unknown='ignore')
+industry_encoder.fit(np.array([int(code) for code in naics_codes]).reshape(-1, 1))
 
 class EconDataset(Dataset):
     def __init__(self, data, state_col, industry_col, unemployment_col, response_col):
@@ -17,13 +23,11 @@ class EconDataset(Dataset):
         self.industry_col = industry_col
         self.unemployment_col = unemployment_col
         self.response_col = response_col
-        self.state_encoder = OneHotEncoder(sparse_output=False, handle_unknown='ignore')
-        self.industry_encoder = OneHotEncoder(sparse_output=False, handle_unknown='ignore')
         self._preprocess_data()
 
     def _preprocess_data(self):
-        self.encoded_states = self.state_encoder.fit_transform(self.data[[self.state_col]].values.reshape(-1, 1)) # Applying one-hot encoding to the state column
-        self.encoded_industries = self.industry_encoder.fit_transform(self.data[[self.industry_col]].values.reshape(-1, 1)) # Applying one-hot encoding to the industry
+        self.encoded_states = state_encoder.transform(self.data[[self.state_col]].values.reshape(-1, 1)) # Applying one-hot encoding to the state column
+        self.encoded_industries = industry_encoder.transform(self.data[[self.industry_col]].values.reshape(-1, 1)) # Applying one-hot encoding to the industry
         self.unemployment_stats = self.data[self.unemployment_col].values.reshape(-1, 1) # Turns into column vector
     
     def __len__(self):

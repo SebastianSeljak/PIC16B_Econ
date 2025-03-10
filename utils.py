@@ -53,6 +53,8 @@ industry_dict = {
     "00": "Total for all sectors"
 }
 
+industry_dict_abbrev = {k.split('-')[0]:v for k,v in industry_dict.items()}
+
 naics_codes = [code[0:2] for code in list(industry_dict.keys())[:-2]]
 
 sic_to_naics_mapping = {
