@@ -8,6 +8,7 @@ from torch.utils.data import DataLoader
 from sklearn.preprocessing import OneHotEncoder
 import tqdm
 from utils import state_dict, naics_codes
+import wandb
 
 
 state_encoder = OneHotEncoder(sparse_output=False, handle_unknown='ignore')
@@ -43,18 +44,18 @@ class EconDataset(Dataset):
     
 # Base Model Architecture  
 class SurvivalRateModel(nn.Module):
-    def __init__(self, input_size, hidden_size1, hidden_size2, output_size = 1):
+    def __init__(self, input_size, hidden_size1, hidden_size2, output_size=1):
         super(SurvivalRateModel, self).__init__()
 
         # Define layers:
         self.layers = nn.Sequential(
             nn.Linear(input_size, hidden_size1),
             nn.ReLU(),
-            nn.Dropout(0.1),
+            nn.Dropout(0.1),  # Dropout, will be configured in train_with_wandb
             nn.Linear(hidden_size1, hidden_size2),
             nn.ReLU(),
             nn.Linear(hidden_size2, output_size),
-            nn.Sigmoid()
+            nn.Sigmoid(),
         )
 
     def forward(self, x):
@@ -64,31 +65,41 @@ class SurvivalRateModel(nn.Module):
         optimizer.zero_grad()
         outputs = self(x)
         loss = criterion(outputs, y)
-
         loss.backward()
         optimizer.step()
         return loss.item()
-    
-    def train_loop(self, dataloader, num_epochs=100, learning_rate=0.01, device="cpu", suppress=False, val_dataloader=None, patience = 40):
+
+    def train_loop(
+        self,
+        dataloader,
+        num_epochs=100,
+        learning_rate=0.01,
+        device="cpu",
+        suppress=False,
+        val_dataloader=None,
+        patience=40,
+    ):
         self.to(device)
         criterion = nn.MSELoss()
-        loss_cache = []
-        val_loss_cache = []
         optimizer = torch.optim.Adam(self.parameters(), lr=learning_rate)
-        self.train() #set model to train mode.
+        self.train()
+        best_val_loss = float("inf")
+        epochs_no_improve = 0
+        train_loss_cache = []
+        val_loss_cache = []
+
         for epoch in tqdm.tqdm(range(num_epochs), desc="Training Epochs"):
-            # Training phase
             self.train()
             total_loss = 0
             for x, y in dataloader:
                 x, y = x.to(device), y.to(device)
                 loss = self.train_step(x, y, criterion, optimizer)
-                loss_cache.append(loss)
                 total_loss += loss
-            train_loss = total_loss/len(dataloader)
-            
-            # Validation phase (if validation data is provided)
-            if val_dataloader is not None:
+            train_loss = total_loss / len(dataloader)
+            train_loss_cache.append(train_loss)
+            wandb.log({"train_loss": train_loss}, step=epoch)
+
+            if val_dataloader:
                 self.eval()
                 val_total_loss = 0
                 with torch.no_grad():
@@ -97,33 +108,30 @@ class SurvivalRateModel(nn.Module):
                         outputs = self(x_val)
                         val_loss = criterion(outputs, y_val).item()
                         val_total_loss += val_loss
-                val_loss = val_total_loss/len(val_dataloader)
+                val_loss = val_total_loss / len(val_dataloader)
                 val_loss_cache.append(val_loss)
+                wandb.log({"val_loss": val_loss}, step=epoch)
 
-
-                best_val_loss = float('inf')
-                # Stops model early if validation loss does not improve for 'patience' epochs
                 if val_loss < best_val_loss:
                     best_val_loss = val_loss
                     epochs_no_improve = 0
-                    # Save the best model (as shown in the previous example)
-                    best_model_state = self.state_dict() # crucial to copy here
+                    best_model_state = self.state_dict()  # Save best model
                 else:
                     epochs_no_improve += 1
-                    if epochs_no_improve == patience:
-                        print(f'Early stopping triggered after epoch {epoch+1}')
-                        self.load_state_dict(best_model_state) # restore best model
+                    if epochs_no_improve >= patience:
+                        if not suppress:
+                            print(f"Early stopping at epoch {epoch + 1}")
+                        self.load_state_dict(best_model_state) # Load best model
                         break
-                
-                if not suppress:
-                    print(f'Epoch [{epoch+1}/{num_epochs}], Train Loss: {train_loss:.4f}, Validation Loss: {val_loss:.4f}')
-            elif not suppress:
-                print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {train_loss:.4f}')
-        
-        if val_dataloader is not None:
-            return loss_cache, val_loss_cache
-        return loss_cache
-    
+
+            if not suppress:
+                print(
+                    f"Epoch {epoch + 1}/{num_epochs}, Train Loss: {train_loss:.4f}"
+                    + (f", Val Loss: {val_loss:.4f}" if val_dataloader else "")
+                )
+
+        return train_loss_cache, val_loss_cache
+
     def evaluate(self, dataloader, device="cpu"):
         self.to(device)
         self.eval()
@@ -136,7 +144,7 @@ class SurvivalRateModel(nn.Module):
                 predictions.append(outputs.cpu().numpy())
                 actuals.append(y.cpu().numpy())
         return (np.concatenate(predictions), np.concatenate(actuals))
-    
+
     def predict(self, x, device="cpu"):
         self.to(device)
         self.eval()

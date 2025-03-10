@@ -154,3 +154,14 @@ def convert_sic_to_naics(sic_code):
         str: The corresponding NAICS code, or None if no mapping is found.
     """
     return sic_to_naics_mapping.get(sic_code[:2], None)
+
+
+# Create a dictionary mapping state abbreviations to their indices
+numerical_state = {abbreviation: index-1 for index, abbreviation in state_dict.items()}
+# Create a reverse dictionary mapping indices to state abbreviations
+numerical_state_rev = {index: abbreviation for abbreviation, index in numerical_state.items()}
+
+# Create a dictionary mapping NAICS codes to their indices
+numerical_industry = {code: index for index, code in enumerate(industry_dict.values()) if index < 19}
+# Create a reverse dictionary mapping indices to NAICS codes
+numerical_industry_rev = {index: code for code, index in numerical_industry.items()}
