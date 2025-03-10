@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+{% block content %}
+hi 
+  <div class="container">
+      <form class="item" method="GET" action="{{ url_for('model_page') }}">
+        <button type="submit">
+          <p class="title">Model</p>
+          <img src= "{{ url_for('static', filename='depositphotos_56141401-stock-photo-business-failure.jpg') }}"> 
+        </button>
+      </form>
+
+      <form class="item" method="GET" action="{{ url_for('figures') }}">
+        <button type="submit">
+          <p class="title">Figures</p>
+          <img src= "{{ url_for('static', filename='figures/hyperparameter_search.png') }}">  
+        </button>
+      </form>
+  </div>
+
+  
+{% endblock %}
