@@ -1,6 +1,6 @@
-from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.metrics import mean_squared_error, r2_score # type: ignore
 from models import state_encoder, industry_encoder
-import torch
+import torch # type: ignore
 import numpy as np
 from utils import *
 import pandas as pd

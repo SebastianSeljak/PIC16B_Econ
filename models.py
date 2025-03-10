@@ -1,14 +1,14 @@
 import sqlite3 as sql
 import pandas as pd
-import torch.nn as nn
-import torch
+import torch.nn as nn # type: ignore
+import torch # type: ignore
 import numpy as np
-from torch.utils.data import Dataset
-from torch.utils.data import DataLoader
-from sklearn.preprocessing import OneHotEncoder
-import tqdm
+from torch.utils.data import Dataset # type: ignore
+from torch.utils.data import DataLoader # type: ignore
+from sklearn.preprocessing import OneHotEncoder # type: ignore
+import tqdm # type: ignore  
 from utils import state_dict, naics_codes
-import wandb
+import wandb # type: ignore
 
 
 state_encoder = OneHotEncoder(sparse_output=False, handle_unknown='ignore')

@@ -1,7 +1,7 @@
 import pandas as pd
 from utils import state_dict, industry_dict, convert_sic_to_naics
-import bls
-import requests
+import bls # type: ignore
+import requests # type: ignore
 import os
 import re
 
