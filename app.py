@@ -21,7 +21,10 @@ def model_page():
             capture_output=True, text=True
         )
         predictions = json.loads(result.stdout)
-        
+	try:
+            predictions = json.loads(result.stdout)
+        except json.JSONDecodeError:
+            predictions = None
     return render_template("model_page.html", predictions=predictions, industries=naics_codes)
 
 
