@@ -21,7 +21,7 @@ def model_page():
             capture_output=True, text=True
         )
         predictions = json.loads(result.stdout)
-	try:
+        try:
             predictions = json.loads(result.stdout)
         except json.JSONDecodeError:
             predictions = None
