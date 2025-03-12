@@ -17,6 +17,7 @@
 
 {% if predictions %}
     <h2>Predictions by State</h2>
+    <img src="{{ url_for('static', filename='survival_rates.png') }}" alt="Survival Rates">
     <table border="1">
         <tr>
             <th>State</th>

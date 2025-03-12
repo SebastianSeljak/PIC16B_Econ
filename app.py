@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect
 import subprocess
 from models import *
 from utils import industry_dict_abbrev, naics_codes, industry_dict_abbrev_rev
-from analysis import generate_state_predictions
+from analysis import generate_state_predictions, plot_survival_rates
 import pickle
 app = Flask(__name__)
 
@@ -26,9 +26,12 @@ def model_page():
         unemployment_rate = float(request.form['unemployment_rate'])
         industry_code = int(industry_dict_abbrev[request.form['industry_code']])
 
-        predictions_df = generate_state_predictions(model, unemployment_rate, industry_code)
+        predictions_df = generate_state_predictions(model, unemployment_rate, industry_code)[0]
         predictions_df['Prediction'] = predictions_df['Prediction'].apply(lambda x: np.round(x, 2))
         predictions = predictions_df.to_dict(orient='records')
+		
+        fig = plot_survival_rates(*generate_state_predictions(model, unemployment_rate, industry_code))
+        fig.write_image('static/survival_rates.png')
 
     return render_template("model_page.html", predictions=predictions, industries=industry_names)
 
