@@ -13,6 +13,7 @@ from models import *
 from utils import *
 import json
 import sys
+import plotly.express as px
 
 
 
@@ -53,7 +54,19 @@ def generate_state_predictions(model, unemployment_rate, industry_code):
         'Prediction': predictions
     })
 
-    return df_predictions
+    return df_predictions, unemployment_rate, industry_code
+
+def plot_survival_rates(survival_state_2, unemployment_rate, industry_code):
+    fig_surv = px.choropleth(
+        survival_state_2,
+        locations='State',
+        locationmode="USA-states",
+        color="Prediction",
+        color_continuous_scale="Magma",
+        scope="usa",
+        title=f"Average Survival Rates by State given unemployment rate {unemployment_rate} and industry code {industry_code}",
+    )
+    return fig_surv
 
 
 
