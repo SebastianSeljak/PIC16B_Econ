@@ -1,11 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# ### Imports
-
-# In[1]:
-
-
 import sqlite3 as sql
 import pandas as pd
 import torch.nn as nn
@@ -22,18 +14,12 @@ from utils import *
 import json
 import sys
 
-# ### Model Loading
-
-# In[2]:
 
 
 import pickle
 # Load the model from the file
 with open('models/model_combined.pkl', 'rb') as f:
     model, loss_data= pickle.load(f)
-
-
-# In[ ]:
 
 
 def generate_state_predictions(model, unemployment_rate, industry_code):
@@ -70,13 +56,11 @@ def generate_state_predictions(model, unemployment_rate, industry_code):
     return df_predictions
 
 
-# #### Example Use: Choosing a given unemployment and industry, we get prediction values for each state:
-
-# In[45]:
 
 
-unemployment_rate = float(sys.argv[1])
-industry_code = sys.argv[2]
-predictions = generate_state_predictions(model, unemployment_rate, industry_code)
-predictions_json = predictions.to_dict(orient="records")
+
+# unemployment_rate = float(sys.argv[1])
+# industry_code = sys.argv[2]
+# predictions = generate_state_predictions(model, unemployment_rate, industry_code)
+# predictions_json = predictions.to_dict(orient="records")
 #print(json.dumps(predictions_json))

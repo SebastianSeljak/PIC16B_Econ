@@ -1,7 +1,10 @@
 from flask import Flask, render_template, request, redirect
 from utils import naics_codes
 import subprocess
-
+from models import *
+from utils import *
+from analysis import generate_state_predictions
+import pickle
 app = Flask(__name__)
 
 @app.route('/', methods=['GET'])
@@ -10,21 +13,21 @@ def home():
 
 import json
 
+# Load the model from the file
+with open('models/model_combined.pkl', 'rb') as f:
+    model, loss_data= pickle.load(f)
+
 @app.route('/model_page', methods=['GET', 'POST'])
 def model_page():
     predictions = None
     if request.method == 'POST':
-        unemployment_rate = request.form['unemployment_rate']
-        industry_code = request.form['industry_code']
-        result = subprocess.run(
-            ["python", "analysis.py", unemployment_rate, industry_code], 
-            capture_output=True, text=True
-        )
-        predictions = json.loads(result.stdout)
-        try:
-            predictions = json.loads(result.stdout)
-        except json.JSONDecodeError:
-            predictions = None
+        unemployment_rate = float(request.form['unemployment_rate'])
+        industry_code = int(request.form['industry_code'])
+
+        predictions_df = generate_state_predictions(model, unemployment_rate, industry_code)
+        predictions_df['Prediction'] = predictions_df['Prediction'].apply(lambda x: np.round(x, 2))
+        predictions = predictions_df.to_dict(orient='records')
+
     return render_template("model_page.html", predictions=predictions, industries=naics_codes)
 
 

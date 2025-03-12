@@ -24,8 +24,8 @@
         </tr>
         {% for row in predictions %}
         <tr>
-            <td>{{ row.State }}</td>
-            <td>{{ row.Prediction }}</td>
+            <td>{{ row['State'] }}</td>
+            <td>{{ row['Prediction'] }}</td>
         </tr>
         {% endfor %}
     </table>
