@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>16B Project: Business Success Predictor</title>
+  <link rel="stylesheet" href="static/styles.css">
+</head>
+
+<body>
+  <header>
+    <h1>16B Project: Business Success Predictor</h1>
+  </header>
+  <nav>
+    <ul>
+      <li><a href = "{{url_for('home')}}"> Home </a></li>
+      <li><a href = "{{url_for('model_page')}}"> Model </a></li>
+      <li><a href = "{{url_for('about')}}"> About </a></li>
+      <li><a href = "{{url_for('figures')}}"> Figures </a></li>
+    </ul>
+  </nav>
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer>
+    <hr>
+    <small>&copy; Jack Donaldson, Roger Kozlyuk, & Sebastien Seljak 2025</small>
+  </footer>
+</body>
+</html>
