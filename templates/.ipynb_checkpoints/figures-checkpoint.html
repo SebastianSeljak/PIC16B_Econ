@@ -1,0 +1,34 @@
+{% extends "layout.html" %}
+{% block content %}
+  <div class="container">
+      <form class="item" method="GET" action="{{ url_for('figures') }}">
+        <button type="submit">
+          <img src= "{{ url_for('static', filename='figures/hyperparameter_search.png') }}">
+          <p class="title"></p>
+        </button>
+      </form>
+
+      <form class="item" method="GET" action="{{ url_for('figures') }}">
+        <button type="submit">
+          <img src= "{{ url_for('static', filename='figures/model_aggressive_reg.png') }}">
+          <p class="title"></p>
+        </button>
+      </form>
+  
+  
+      <form class="item" method="GET" action="{{ url_for('figures') }}">
+        <button type="submit">
+          <img src= "{{ url_for('static', filename='figures/model_deeplearn.png') }}">
+          <p class="title"></p>
+        </button>
+      </form>
+  
+  
+      <form class="item" method="GET" action="{{ url_for('figures') }}">
+        <button type="submit">
+          <img src= "{{ url_for('static', filename='figures/model_optimal_hyper.png') }}">
+          <p class="title"></p>
+        </button>
+      </form>
+  </div>
+{% endblock %}
