@@ -67,7 +67,7 @@ class SurvivalRateModel(nn.Module):
         self.layers = nn.Sequential(
             nn.Linear(input_size, hidden_size1),
             nn.ReLU(),
-            nn.Dropout(dropout),  # Dropout, will be configured in train_with_wandb
+            nn.Dropout(dropout),
             nn.Linear(hidden_size1, hidden_size2),
             nn.ReLU(),
             nn.Linear(hidden_size2, output_size),

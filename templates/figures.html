@@ -30,5 +30,26 @@
           <p class="title"></p>
         </button>
       </form>
+
+      <form class="item" method="GET" action="{{ url_for('figures') }}">
+        <button type="submit">
+          <img src= "{{ url_for('static', filename='figures/unemployment.png') }}">
+          <p class="title"></p>
+        </button>
+      </form>
+
+      <form class="item" method="GET" action="{{ url_for('figures') }}">
+        <button type="submit">
+          <img src= "{{ url_for('static', filename='figures/Survival.png') }}">
+          <p class="title"></p>
+        </button>
+      </form>
+
+      <form class="item" method="GET" action="{{ url_for('figures') }}">
+        <button type="submit">
+          <img src= "{{ url_for('static', filename='figures/establishments.png') }}">
+          <p class="title"></p>
+        </button>
+      </form>
   </div>
 {% endblock %}
