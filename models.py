@@ -245,9 +245,9 @@ class SurvivalRateModel_DeepLearning(SurvivalRateModel):
             nn.Sigmoid()
         )
 
-#Implements batchnorm, dropout, elastic net and noise injection with strong regularization
+#Implements batchnorm, dropout, elastic net and noise injection with strong regularization, and breadth 
 class SurvivalRateModel_Combined(SurvivalRateModel):
-    def __init__(self, input_size, hidden_size1, hidden_size2, hidden_size3, hidden_size4, output_size = 1, l1_lambda = 1e-2, l2_lambda = 1e-2, noise_std=0.05, dropout_rate=0.25):
+    def __init__(self, input_size, hidden_size1, hidden_size2, hidden_size3, hidden_size4, output_size = 1, l1_lambda = 1e-2, l2_lambda = 1e-2, noise_std=0.05, dropout_rate=0.25, breadth_lambda=0.1):
         # We call the parent constructor but we'll override the layers
         super(SurvivalRateModel_Combined, self).__init__(input_size, hidden_size1, hidden_size2, output_size)
         
@@ -255,6 +255,7 @@ class SurvivalRateModel_Combined(SurvivalRateModel):
         self.l2_lambda = l2_lambda
         self.noise_std = noise_std
         self.dropout_rate = dropout_rate
+        self.breadth_lambda = breadth_lambda
 
         # Override the layers with a deeper architecture and more regularization
         self.layers = nn.Sequential(
@@ -297,6 +298,8 @@ class SurvivalRateModel_Combined(SurvivalRateModel):
             l2_reg += torch.norm(param, 2)
 
         loss = loss + self.l1_lambda * l1_reg + self.l2_lambda * l2_reg
+        breadth_loss = -torch.std(outputs)
+        total_loss = loss + self.breadth_lambda * breadth_loss
 
         loss.backward()
         optimizer.step()
