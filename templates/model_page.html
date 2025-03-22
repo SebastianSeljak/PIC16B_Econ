@@ -7,8 +7,8 @@
 
     <label for="industry_code">Industry Code:</label>
     <select name="industry_code" required>
-        {% for code in industries %}
-            <option value="{{ code }}">{{ code }}</option>
+        {% for name in industries %}
+            <option value="{{ name }}">{{ name }}</option>
         {% endfor %}
     </select>
 

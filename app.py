@@ -20,11 +20,11 @@ with open('models/model_combined.pkl', 'rb') as f:
 def model_page():
     predictions = None
     print(naics_codes)
-    industry_names = list(industry_dict_abbrev.keys())
+    industry_names = list(industry_dict_abbrev_rev.keys())
     print(industry_names)
     if request.method == 'POST':
         unemployment_rate = float(request.form['unemployment_rate'])
-        industry_code = int(industry_dict_abbrev[request.form['industry_code']])
+        industry_code = int(industry_dict_abbrev_rev[request.form['industry_code']])
 
         predictions_df = generate_state_predictions(model, unemployment_rate, industry_code)[0]
         predictions_df['Prediction'] = predictions_df['Prediction'].apply(lambda x: np.round(x, 2))

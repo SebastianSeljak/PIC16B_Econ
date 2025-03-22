@@ -54,6 +54,7 @@ industry_dict = {
 }
 
 industry_dict_abbrev = {k.split('-')[0]:v for k,v in industry_dict.items()}
+industry_dict_abbrev_rev = {v:k.split('-')[0] for k,v in industry_dict.items()}
 
 naics_codes = [code[0:2] for code in list(industry_dict.keys())[:-2]]
 
